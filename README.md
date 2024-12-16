@@ -1,16 +1,19 @@
 # Vault Integration Development Environments
 
-## Instructions for installing and running HashiCorp Vault on an AWS EC2 instance.
+## Instructions for Installing and Running HashiCorp Vault on an AWS EC2 Instance
+
 ### 1. Create an AWS EC2 Instance with Ubuntu
+- Launch an EC2 instance with an Ubuntu AMI.
+- Make sure to configure the appropriate security group to allow SSH access and inbound traffic on port 8200 for Vault access.
 
 ### 2. Install Vault on the EC2 Instance
 
-1. SSH into your EC2 instance:
+1. **SSH into your EC2 instance**:
    ```bash
    ssh -i your-key.pem ubuntu@your-ec2-public-ip
    ```
 
-2. Install Vault by running the following commands:
+2. **Install Vault by running the following commands**:
    ```bash
    wget -O - https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
@@ -19,17 +22,16 @@
 
 ### 3. Start Vault
 
-1. To start Vault in development mode, run:
+1. **Start Vault in development mode**:
    ```bash
    vault server -dev -dev-listen-address="0.0.0.0:8200"
    ```
 
    This starts Vault in development mode and listens on all IPs at port 8200.
 
-   > **Warning**: Development mode should NOT be used in production installations.
+   **Warning**: Development mode should **NOT** be used in production environments.
 
-2. After running the command, you will see output similar to the following, which includes the **Unseal Key** and **Root Token**:
-
+2. After running the command, Vault will output the **Unseal Key** and **Root Token**. These are necessary for unsealing and accessing the Vault UI:
    ```
    The unseal key and root token are displayed below in case you want to
    seal/unseal the Vault or re-authenticate.
@@ -39,127 +41,112 @@
    ```
 
    - **Unseal Key**: Used to unseal Vault after it has been sealed.
-   - **Root Token**: The token will be used to log into the Vault UI with root access.
+   - **Root Token**: Used for initial login to Vault with root access.
 
 ### 4. Access Vault from Browser
 
-1. Open the **Security Groups** section in AWS EC2 instance's settings.
-2. Add an inbound rule to allow traffic on port 8200:
+1. **Open the EC2 instance's Security Groups** and add an inbound rule to allow traffic on port 8200:
    - Type: **Custom TCP**
    - Port: **8200**
-   - Source: **0.0.0.0/0** (or restrict to IP)
-   
-3. Access Vault from the browser:
+   - Source: **0.0.0.0/0** (or restrict to specific IPs)
+
+2. **Access Vault** by opening your browser and navigating to:
    ```
    http://<ec2-public-ip>:8200
    ```
 
    Use the **Root Token** from the terminal output to log in as the root user.
 
-![log in](https://github.com/user-attachments/assets/f6e7b8a8-fd57-494a-89ce-dd1a75235d2e)
+   ![log in](https://github.com/user-attachments/assets/f6e7b8a8-fd57-494a-89ce-dd1a75235d2e)
 
-![UI](https://github.com/user-attachments/assets/7776fd6b-34b5-4c84-8656-56b48ec107c1)
+   ![UI](https://github.com/user-attachments/assets/7776fd6b-34b5-4c84-8656-56b48ec107c1)
 
-![Secrets Engine](https://github.com/user-attachments/assets/1eeb64fc-7f9a-4ab6-8035-f51d906a99b8)
+   ![Secrets Engine](https://github.com/user-attachments/assets/1eeb64fc-7f9a-4ab6-8035-f51d906a99b8)
 
-![Enable a Secrets Engine](https://github.com/user-attachments/assets/3fbf0ce2-3ddc-4bf1-a85d-2b0de5d2c60f)
+   ![Enable a Secrets Engine](https://github.com/user-attachments/assets/3fbf0ce2-3ddc-4bf1-a85d-2b0de5d2c60f)
 
-![image](https://github.com/user-attachments/assets/bbaced97-3318-4807-b41e-4ffb6dce34f8)
+   ![image](https://github.com/user-attachments/assets/bbaced97-3318-4807-b41e-4ffb6dce34f8)
 
-![image](https://github.com/user-attachments/assets/199dd612-9abe-4725-bf76-77f3d1880148)
+   ![image](https://github.com/user-attachments/assets/199dd612-9abe-4725-bf76-77f3d1880148)
 
-Create a Secret in KV
-![image](https://github.com/user-attachments/assets/eb596c4e-16b7-4889-bb1b-c28eaa23ffc8)
+### 5. Create a Secret in KV
 
-![image](https://github.com/user-attachments/assets/b5286de9-7835-477c-b85b-ddc018db72fb)
+1. Navigate to the **Secrets Engines** section in the Vault UI.
+2. Enable a **KV Secrets Engine** and create a secret.
 
-### How can we grant access for Terraform or Ansible, we need to create a roll inside the Hashicorp Vault 
-(It is similar to the concept of IAM Roles and for the IAM Roles we grant the policies. Consider Access as an IAM Roles and Policies as policies)
-![image](https://github.com/user-attachments/assets/a1afce53-1ba6-41a9-aa6b-53ae391c9896)
+   ![Create a Secret](https://github.com/user-attachments/assets/eb596c4e-16b7-4889-bb1b-c28eaa23ffc8)
 
-Use AppRole base auth for Ansible and Terraform
-![image](https://github.com/user-attachments/assets/1d502d5d-57b9-44e5-93d2-acd5478d3e3c)
+   ![Secret Engine](https://github.com/user-attachments/assets/b5286de9-7835-477c-b85b-ddc018db72fb)
 
-![image](https://github.com/user-attachments/assets/b34a5a6a-3742-4897-a664-e1259ba9cdc8)
+### 6. Grant Access to Terraform or Ansible via Vault
 
-![image](https://github.com/user-attachments/assets/ef3e54f4-b40b-4c98-a8ca-7c3551e51af3)
+Similar to **IAM Roles** in AWS, in Vault, we create **roles** and assign **policies** to manage access. This is how we control access for Terraform and Ansible:
 
-We can not create any roles through the user interface, Use CLI for it...
+   ![image](https://github.com/user-attachments/assets/a1afce53-1ba6-41a9-aa6b-53ae391c9896)
 
-## Configure Terraform to Read Secrets from Vault
+   Use **AppRole-based authentication** for Terraform and Ansible integration:
+   ![AppRole](https://github.com/user-attachments/assets/1d502d5d-57b9-44e5-93d2-acd5478d3e3c)
 
-To configure Terraform to authenticate and read secrets from Vault, follow these steps to enable and configure AppRole authentication in Vault:
+   ![AppRole Details](https://github.com/user-attachments/assets/b34a5a6a-3742-4897-a664-e1259ba9cdc8)
 
-### 1. Enable AppRole Authentication
+   ![Role Config](https://github.com/user-attachments/assets/ef3e54f4-b40b-4c98-a8ca-7c3551e51af3)
 
-To enable the AppRole authentication method in Vault, use the Vault CLI:
+### 7. Create Roles Using the CLI
 
-```bash
-vault auth enable approle
-```
+We cannot create roles via the Vault UI. Use the Vault CLI for this:
 
-This command enables the AppRole authentication method in Vault.
+1. **Enable AppRole Authentication**:
+   ```bash
+   vault auth enable approle
+   ```
 
-### 2. Create an AppRole
+2. **Create a Policy**:
+   Create a policy that allows the AppRole to access necessary paths:
+   ```bash
+   vault policy write terraform - <<EOF
+   path "*" {
+     capabilities = ["list", "read"]
+   }
 
-First, create a policy that will define the capabilities for your AppRole. Use the following policy definition to allow access to necessary paths:
+   path "secrets/data/*" {
+     capabilities = ["create", "read", "update", "delete", "list"]
+   }
 
-```bash
-vault policy write terraform - <<EOF
-path "*" {
-  capabilities = ["list", "read"]
-}
+   path "kv/data/*" {
+     capabilities = ["create", "read", "update", "delete", "list"]
+   }
 
-path "secrets/data/*" {
-  capabilities = ["create", "read", "update", "delete", "list"]
-}
+   path "secret/data/*" {
+     capabilities = ["create", "read", "update", "delete", "list"]
+   }
 
-path "kv/data/*" {
-  capabilities = ["create", "read", "update", "delete", "list"]
-}
+   path "auth/token/create" {
+     capabilities = ["create", "read", "update", "list"]
+   }
+   EOF
+   ```
 
-path "secret/data/*" {
-  capabilities = ["create", "read", "update", "delete", "list"]
-}
+3. **Create the AppRole**:
+   ```bash
+   vault write auth/approle/role/terraform \
+       secret_id_ttl=10m \
+       token_num_uses=10 \
+       token_ttl=20m \
+       token_max_ttl=30m \
+       secret_id_num_uses=40 \
+       token_policies=terraform
+   ```
 
-path "auth/token/create" {
-  capabilities = ["create", "read", "update", "list"]
-}
-EOF
-```
+4. **Generate Role ID and Secret ID**:
 
-Then, create the AppRole with the desired authentication settings:
+   - **Generate Role ID**:
+     ```bash
+     vault read auth/approle/role/terraform/role-id
+     ```
 
-```bash
-vault write auth/approle/role/terraform \
-    secret_id_ttl=10m \
-    token_num_uses=10 \
-    token_ttl=20m \
-    token_max_ttl=30m \
-    secret_id_num_uses=40 \
-    token_policies=terraform
-```
+   - **Generate Secret ID**:
+     ```bash
+     vault write -f auth/approle/role/terraform/secret-id
+     ```
 
-### 3. Generate Role ID and Secret ID
-
-After creating the AppRole, you need to generate a **Role ID** and **Secret ID**.
-
-#### a. Generate Role ID
-
-To generate the **Role ID**, run the following command:
-
-```bash
-vault read auth/approle/role/terraform/role-id
-```
-
-Save the **Role ID** for use in your Terraform configuration.
-
-#### b. Generate Secret ID
-
-To generate a **Secret ID**, run the following command:
-
-```bash
-vault write -f auth/approle/role/terraform/secret-id
-```
-
-This command will generate a **Secret ID** and provide it in the response. Save the **Secret ID** securely, as it will be used to authenticate Terraform.
+   Save both **Role ID** and **Secret ID** securely. These will be used for authentication in Terraform.
