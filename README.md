@@ -1,5 +1,6 @@
-## Instructions for installing and running HashiCorp Vault on an AWS EC2 instance.
+# Vault Integration Development Environments
 
+## Instructions for installing and running HashiCorp Vault on an AWS EC2 instance.
 ### 1. Create an AWS EC2 Instance with Ubuntu
 
 ### 2. Install Vault on the EC2 Instance
